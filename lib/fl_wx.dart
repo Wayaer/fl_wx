@@ -9,12 +9,6 @@ export 'package:fl_wx/fl_wx.dart';
 
 part 'params.dart';
 
-typedef FlWXWeChatShareResponse = void Function(WeChatShareResponse response);
-typedef FlWXWeChatAuthResponse = Function(WeChatAuthResponse response);
-typedef FlWXWeChatAuthResponseToken = Function(
-    WeChatAuthResponse response, WXTokenModel token);
-typedef FlWXWeChatAuthResponseUserinfo = Function(
-    WeChatAuthResponse response, WXUserModel userInfo);
 
 class FlWX {
   factory FlWX() => _singleton ??= FlWX._();

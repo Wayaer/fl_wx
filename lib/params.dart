@@ -1,5 +1,19 @@
 part of 'fl_wx.dart';
 
+/// Share 回调
+typedef FlWXWeChatShareResponse = void Function(WeChatShareResponse response);
+
+/// Auth 回调
+typedef FlWXWeChatAuthResponse = Function(WeChatAuthResponse response);
+
+/// Auth token 回调
+typedef FlWXWeChatAuthResponseToken = Function(
+    WeChatAuthResponse response, WXTokenModel token);
+
+/// Auth userinfo 回调
+typedef FlWXWeChatAuthResponseUserinfo = Function(
+    WeChatAuthResponse response, WXUserModel userInfo);
+
 typedef FlWXToastBuilder = void Function(String msg);
 typedef FlWXLogBuilder = void Function(String msg);
 typedef FlWXHTTPBuilder = Future<String> Function(String url);
