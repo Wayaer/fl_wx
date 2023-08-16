@@ -1,0 +1,26 @@
+name: example
+description: A new Flutter project.
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=2.18.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  fl_wx:
+    path: ../
+  cupertino_icons: ^1.0.2
+
+dev_dependencies:
+  flutter_lints: ^2.0.2
+
+flutter:
+  uses-material-design: true
+
+fluwx:
+  app_id: 'test'
+  debug_logging: true
+  ios:
+    universal_link: https://test/app/
