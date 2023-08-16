@@ -9,7 +9,6 @@ export 'package:fl_wx/fl_wx.dart';
 
 part 'params.dart';
 
-
 class FlWX {
   factory FlWX() => _singleton ??= FlWX._();
 
@@ -66,16 +65,15 @@ class FlWX {
 
   /// 是否安装微信
   Future<bool> get isInstalled async {
+    assert(_isRegister, '请先调用 FlWX().register()');
     final installed = await fluWX.isWeChatInstalled;
-    if (!installed) {
-      params!.toastBuilder?.call('该服务需要先安装微信');
-    }
+    if (!installed) params!.toastBuilder?.call('该服务需要先安装微信');
     return installed;
   }
 
   /// isSupportOpenBusinessView
   Future<bool> get isSupportOpenBusinessView async {
-    if (!(await isInstalled)) return false;
+    if (!await isInstalled) return false;
     return await fluWX.isSupportOpenBusinessView;
   }
 
@@ -120,8 +118,6 @@ class FlWX {
     bool getUserInfo = false,
   }) async {
     if (!await isInstalled) return false;
-    assert(_isRegister, '请先调用 FlWX().register()');
-
     final cancelable = onListener((response) async {
       if (response is WeChatAuthResponse) {
         onResult?.call(response);
@@ -153,7 +149,7 @@ class FlWX {
                   return;
                 }
                 final userInfo = WXUserModel.fromJson(jsonDecode(userInfoData));
-                onUserinfo(response, userInfo);
+                onUserinfo(response, token, userInfo);
               }
             } catch (e) {
               params!.logBuilder?.call('数据解析失败 $e');

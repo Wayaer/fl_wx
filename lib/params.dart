@@ -12,11 +12,16 @@ typedef FlWXWeChatAuthResponseToken = Function(
 
 /// Auth userinfo 回调
 typedef FlWXWeChatAuthResponseUserinfo = Function(
-    WeChatAuthResponse response, WXUserModel userInfo);
+    WeChatAuthResponse response, WXTokenModel token, WXUserModel userInfo);
 
+/// 显示 toast
 typedef FlWXToastBuilder = void Function(String msg);
+
+/// 日志 打印
 typedef FlWXLogBuilder = void Function(String msg);
-typedef FlWXHTTPBuilder = Future<String> Function(String url);
+
+/// http 请求
+typedef FlWXHTTPBuilder = Future<String?> Function(String url);
 
 class FlWXBuilderParams {
   /// toast 显示
@@ -25,7 +30,7 @@ class FlWXBuilderParams {
   /// 日志 打印
   FlWXLogBuilder? logBuilder;
 
-  /// http 请求
+  /// http 请求 返回 json
   FlWXHTTPBuilder? httpBuilder;
 }
 
