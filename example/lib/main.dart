@@ -1,4 +1,6 @@
+import 'package:fl_wx/fl_wx.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_waya/flutter_waya.dart';
 
 void main() {
   runApp(MaterialApp(
@@ -17,7 +19,16 @@ class _HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(children: [
-      Button('res', onPressed: () {}),
+      Button('res', onPressed: () {
+        FlWX().register(
+            appId: '',
+            params: FlWXBuilderParams(
+                httpBuilder: (url) async {
+                  return '';
+                },
+                logBuilder: (v) => log(v),
+                toastBuilder: (v) => showToast(v)));
+      }),
     ]);
   }
 }

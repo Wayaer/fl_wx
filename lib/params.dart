@@ -24,14 +24,16 @@ typedef FlWXLogBuilder = void Function(String msg);
 typedef FlWXHTTPBuilder = Future<String?> Function(String url);
 
 class FlWXBuilderParams {
+  FlWXBuilderParams({this.toastBuilder, this.logBuilder, this.httpBuilder});
+
   /// toast 显示
-  FlWXToastBuilder? toastBuilder;
+  final FlWXToastBuilder? toastBuilder;
 
   /// 日志 打印
-  FlWXLogBuilder? logBuilder;
+  final FlWXLogBuilder? logBuilder;
 
   /// http 请求 返回 json
-  FlWXHTTPBuilder? httpBuilder;
+  final FlWXHTTPBuilder? httpBuilder;
 }
 
 class WXUserModel {
