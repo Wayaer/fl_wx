@@ -1,5 +1,7 @@
 part of 'fl_wx.dart';
 
+typedef FlWXWeChatResponse = void Function(WeChatResponse response);
+
 /// Share 回调
 typedef FlWXWeChatShareResponse = void Function(WeChatShareResponse response);
 
@@ -103,19 +105,16 @@ class WXTokenModel {
 extension ExtensionMap on Map {
   Payment? toPayment() {
     try {
-      final appId = (this['appId'] ?? this['appid']) as String?;
+      final appId = (this['appId'] ?? this['appid']);
       final partnerId = (this['partnerId'] ??
           this['partnerid'] ??
           this['partner']) as String?;
-      final prepayId =
-          (this['prepayId'] ?? this['prepayid'] ?? this['prepay']) as String?;
-      final packageValue = (this['packageValue'] ??
-          this['packagevalue'] ??
-          this['package']) as String?;
-      final nonceStr =
-          (this['nonceStr'] ?? this['noncestr'] ?? this['nonce']) as String?;
-      final timestamp = (this['timestamp'] ?? this['timeStamp']) as int?;
-      final sign = (this['sign'] ?? this['sign']) as String?;
+      final prepayId = (this['prepayId'] ?? this['prepayid'] ?? this['prepay']);
+      final packageValue =
+          (this['packageValue'] ?? this['packagevalue'] ?? this['package']);
+      final nonceStr = (this['nonceStr'] ?? this['noncestr'] ?? this['nonce']);
+      final timestamp = (this['timestamp'] ?? this['timeStamp']);
+      final sign = (this['sign'] ?? this['sign']);
       if (appId != null &&
           partnerId != null &&
           prepayId != null &&
@@ -124,13 +123,13 @@ extension ExtensionMap on Map {
           timestamp != null &&
           sign != null) {
         return Payment(
-            appId: appId,
-            partnerId: partnerId,
-            prepayId: prepayId,
-            packageValue: packageValue,
-            nonceStr: nonceStr,
-            timestamp: timestamp,
-            sign: sign);
+            appId: appId.toString(),
+            partnerId: partnerId.toString(),
+            prepayId: prepayId.toString(),
+            packageValue: packageValue.toString(),
+            nonceStr: nonceStr.toString(),
+            timestamp: int.parse(timestamp!.toString()),
+            sign: sign.toString());
       }
     } catch (e) {
       debugPrint(e.toString());

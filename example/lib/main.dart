@@ -9,7 +9,8 @@ void main() {
     theme: ThemeData.light(useMaterial3: true),
     darkTheme: ThemeData.dark(useMaterial3: true),
     home: Scaffold(
-        appBar: AppBar(title: const Text('FlWX')), body: const _HomePage()),
+        appBar: AppBar(title: const Text('FlWX')),
+        body: Center(child: const _HomePage())),
   ));
 }
 
@@ -18,8 +19,8 @@ class _HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(children: [
-      Button('res', onPressed: () {
+    return Wrap(spacing: 12, alignment: WrapAlignment.center, children: [
+      Button('register', onPressed: () {
         FlWX().register(
             appId: '',
             params: FlWXBuilderParams(
@@ -28,6 +29,29 @@ class _HomePage extends StatelessWidget {
                 },
                 logBuilder: (v) => log(v),
                 toastBuilder: (v) => showToast(v)));
+      }),
+      Button('isInstalled', onPressed: () {
+        FlWX().isInstalled;
+      }),
+      Button('isSupportOpenBusinessView', onPressed: () {
+        FlWX().isSupportOpenBusinessView;
+      }),
+      Button('authBy', onPressed: () {
+        FlWX().authBy(NormalAuth(scope: ''));
+      }),
+      Button('pay', onPressed: () {
+        final pay = {}.toPayment();
+        if (pay != null) FlWX().pay(pay);
+      }),
+      Button('open', onPressed: () {
+        FlWX().open(WeChatApp());
+      }),
+      Button('share', onPressed: () {
+        FlWX().share(WeChatShareTextModel('share'));
+      }),
+      Button('getExtMsg', onPressed: () async {
+        final result = await FlWX().getExtMsg();
+        if (result != null) showToast(result);
       }),
     ]);
   }
