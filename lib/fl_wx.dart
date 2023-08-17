@@ -694,7 +694,7 @@ extension ExtensionMap on Map {
           (this['packageValue'] ?? this['packagevalue'] ?? this['package']);
       final nonceStr = (this['nonceStr'] ?? this['noncestr'] ?? this['nonce']);
       final timestamp = (this['timestamp'] ?? this['timeStamp']);
-      final sign = (this['sign'] ?? this['sign']);
+      final sign = this['sign'];
       if (appId != null &&
           partnerId != null &&
           prepayId != null &&
