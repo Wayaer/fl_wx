@@ -4,14 +4,13 @@ import 'package:flutter_waya/flutter_waya.dart';
 
 void main() {
   runApp(MaterialApp(
-    title: 'FlWX',
-    debugShowCheckedModeBanner: false,
-    theme: ThemeData.light(useMaterial3: true),
-    darkTheme: ThemeData.dark(useMaterial3: true),
-    home: Scaffold(
-        appBar: AppBar(title: const Text('FlWX')),
-        body: Center(child: const _HomePage())),
-  ));
+      title: 'FlWX',
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData.light(useMaterial3: true),
+      darkTheme: ThemeData.dark(useMaterial3: true),
+      home: Scaffold(
+          appBar: AppBar(title: const Text('FlWX')),
+          body: const Center(child: _HomePage()))));
 }
 
 class _HomePage extends StatelessWidget {

@@ -1,18 +1,18 @@
 name: fl_wx
 description: Simple encapsulation and extension of fluwx,The fluwx plugin will be updated here.
-version: 0.0.2
+version: 0.0.3
 repository: https://github.com/Wayaer/fl_wx.git
 
 environment:
   sdk: '>=2.18.0 <4.0.0'
-  flutter: ">=3.0.0"
+  flutter: '>=3.0.0'
 
 dependencies:
   flutter:
     sdk: flutter
-  fluwx: ^4.2.7
+  fluwx: ^4.3.0
 
 dev_dependencies:
-  flutter_lints: ^2.0.2
+  flutter_lints: ^2.0.3
 
 
