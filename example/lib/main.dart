@@ -26,7 +26,7 @@ class _HomePage extends StatelessWidget {
                 httpBuilder: (url) async {
                   return '';
                 },
-                logBuilder: (v) => log(v),
+                logBuilder: (v) => v.log(),
                 toastBuilder: (v) => showToast(v)));
       }),
       Button('isInstalled', onPressed: () {
