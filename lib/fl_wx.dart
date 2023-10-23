@@ -54,6 +54,8 @@ class FlWX {
 
   String _appName = '';
   FlWXBuilderParams? _params;
+
+  /// 分享时的缩略图
   WeChatImage? _shareThumbnail;
 
   /// register
@@ -68,7 +70,11 @@ class FlWX {
 
     /// 用于获取用户信息
     String? appSecret,
+
+    /// app名称（用于分享时使用）
     String appName = '',
+
+    /// 分享时的缩略图
     WeChatImage? shareThumbnail,
   }) {
     assert(appId.isNotEmpty);
