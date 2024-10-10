@@ -1,13 +1,13 @@
+import 'package:fl_extended/fl_extended.dart';
 import 'package:fl_wx/fl_wx.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_waya/flutter_waya.dart';
 
 void main() {
   runApp(MaterialApp(
       title: 'FlWX',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData.light(useMaterial3: true),
-      darkTheme: ThemeData.dark(useMaterial3: true),
+      theme: ThemeData.light(),
+      darkTheme: ThemeData.dark(),
       home: Scaffold(
           appBar: AppBar(title: const Text('FlWX')),
           body: const Center(child: _HomePage()))));
@@ -21,12 +21,12 @@ class _HomePage extends StatelessWidget {
     return Wrap(spacing: 12, alignment: WrapAlignment.center, children: [
       Button('register', onPressed: () {
         FlWX().register(
-            appId: '',
+            appId: '1111',
             params: FlWXBuilderParams(
                 httpBuilder: (url) async {
                   return '';
                 },
-                logBuilder: (v) => v.log(),
+                logBuilder: (v) => log(v),
                 toastBuilder: (v) => showToast(v)));
       }),
       Button('isInstalled', onPressed: () {
