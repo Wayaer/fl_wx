@@ -1,37 +1,55 @@
-library fl_wx;
-
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'package:flutter/material.dart';
+import 'dart:typed_data';
 import 'package:fluwx/fluwx.dart';
 
 export 'package:fluwx/fluwx.dart';
 
-typedef FlWXWeChatResponse = void Function(WeChatResponse response);
+typedef FlWeChatResponseCallback = void Function(WeChatResponse response);
+
+/// 支持成功
+typedef FlWeChatPayResponseResultCallback = void Function();
+
+/// 支付结果回调
+typedef FlWeChatPayResponseCallback = void Function(
+    WeChatPaymentResponse response);
+
+/// LaunchFromWX 回调
+typedef FlWeChatLaunchFromWXRequestCallback = void Function(
+    WeChatLaunchFromWXRequest response);
+
+/// OpenBusinessWebView 回调
+typedef FlWeChatOpenBusinessWebViewResponseCallback = void Function(
+    WeChatOpenBusinessWebviewResponse response);
+
+/// WeChatOpenBusinessView 回调
+typedef FlWeChatOpenBusinessViewResponseCallback = void Function(
+    WeChatOpenBusinessViewResponse response);
 
 /// Share 回调
-typedef FlWXWeChatShareResponse = void Function(WeChatShareResponse response);
+typedef FlWeChatShareResponseCallback = void Function(
+    WeChatShareResponse response);
 
 /// Auth 回调
-typedef FlWXWeChatAuthResponse = Function(WeChatAuthResponse response);
+typedef FlWeChatAuthResponseCallback = Function(WeChatAuthResponse response);
 
 /// Auth token 回调
-typedef FlWXWeChatAuthResponseToken = Function(
+typedef FlWeChatAuthResponseTokenCallback = Function(
     WeChatAuthResponse response, WXTokenModel token);
 
 /// Auth userinfo 回调
-typedef FlWXWeChatAuthResponseUserinfo = Function(
+typedef FlWeChatAuthResponseUserinfoCallback = Function(
     WeChatAuthResponse response, WXTokenModel token, WXUserModel userInfo);
 
 /// 显示 toast
-typedef FlWXToastBuilder = void Function(String msg);
+typedef FlWXToastCallback = void Function(String msg);
 
 /// 日志 打印
-typedef FlWXLogBuilder = void Function(String msg);
+typedef FlWXLogCallback = void Function(String msg);
 
 /// http 请求
-typedef FlWXHTTPBuilder = Future<String?> Function(String url);
+typedef FlWXHTTPCallback = Future<String?> Function(String url);
 
 class FlWX {
   factory FlWX() => _singleton ??= FlWX._();
@@ -40,7 +58,7 @@ class FlWX {
 
   static FlWX? _singleton;
 
-  final Fluwx fluWX = Fluwx();
+  final Fluwx fluwx = Fluwx();
 
   String? _appId;
 
@@ -53,17 +71,19 @@ class FlWX {
   String? get appSecret => _appSecret;
 
   String _appName = '';
-  FlWXBuilderParams? _params;
+
+  /// callback params
+  FlWXCallbackParams? _params;
 
   /// 分享时的缩略图
-  WeChatImage? _shareThumbnail;
+  Uint8List? _shareThumbnail;
 
   /// register
   bool _isRegister = false;
 
   Future<bool> register({
     required String appId,
-    required FlWXBuilderParams params,
+    required FlWXCallbackParams params,
     String? universalLink,
     bool doOnIOS = true,
     bool doOnAndroid = true,
@@ -75,7 +95,7 @@ class FlWX {
     String appName = '',
 
     /// 分享时的缩略图
-    WeChatImage? shareThumbnail,
+    Uint8List? shareThumbnail,
   }) {
     assert(appId.isNotEmpty);
     if (universalLink != null) assert(universalLink.isNotEmpty);
@@ -88,7 +108,7 @@ class FlWX {
     _appName = appName;
     _shareThumbnail = shareThumbnail;
     _params = params;
-    return fluWX.registerApi(
+    return fluwx.registerApi(
         appId: appId,
         doOnAndroid: doOnAndroid,
         doOnIOS: doOnIOS,
@@ -111,42 +131,42 @@ class FlWX {
   /// 是否安装微信
   Future<bool> get isInstalled async {
     assert(_isRegister, '请先调用 FlWX().register()');
-    final installed = await fluWX.isWeChatInstalled;
-    if (!installed) _params!.toastBuilder?.call('该服务需要先安装微信');
+    final installed = await fluwx.isWeChatInstalled;
+    if (!installed) _params!.onToast?.call('该服务需要先安装微信');
     return installed;
   }
 
   /// isSupportOpenBusinessView
   Future<bool> get isSupportOpenBusinessView async {
     if (!await isInstalled) return false;
-    return await fluWX.isSupportOpenBusinessView;
+    return await fluwx.isSupportOpenBusinessView;
   }
 
   /// 添加移除监听
-  FluwxCancelable _onListener(FlWXWeChatResponse onResult) {
+  FluwxCancelable _onListener(FlWeChatResponseCallback onResponse) {
     late FluwxCancelable cancelable;
     subscriber(response) {
-      onResult(response);
+      onResponse(response);
       Future.delayed(const Duration(milliseconds: 500), () {
         cancelable.cancel();
       });
     }
 
-    return cancelable = fluWX.addSubscriber(subscriber);
+    return cancelable = fluwx.addSubscriber(subscriber);
   }
 
   Future<String?> getExtMsg() async {
     if (!await isInstalled) return null;
-    return await fluWX.getExtMsg();
+    return await fluwx.getExtMsg();
   }
 
   Future<void> attemptToResumeMsgFromWx(
-      {Function(WeChatShowMessageFromWXRequest response)? onResult}) async {
+      {Function(WeChatShowMessageFromWXRequest response)? onResponse}) async {
     if (!await isInstalled) return;
-    await fluWX.attemptToResumeMsgFromWx();
-    if (onResult != null) {
+    await fluwx.attemptToResumeMsgFromWx();
+    if (onResponse != null) {
       _onListener((response) {
-        if (response is WeChatShowMessageFromWXRequest) onResult(response);
+        if (response is WeChatShowMessageFromWXRequest) onResponse(response);
       });
     }
   }
@@ -155,26 +175,26 @@ class FlWX {
   Future<bool> authBy(
     AuthType which, {
     /// 原始数据回调
-    FlWXWeChatAuthResponse? onResult,
+    FlWeChatAuthResponseCallback? onResponse,
 
     /// 获取token回调
-    FlWXWeChatAuthResponseToken? onToken,
+    FlWeChatAuthResponseTokenCallback? onToken,
 
     /// 获取userinfo回调
-    FlWXWeChatAuthResponseUserinfo? onUserinfo,
+    FlWeChatAuthResponseUserinfoCallback? onUserinfo,
     bool getUserInfo = false,
   }) async {
     if (!await isInstalled) return false;
     final cancelable = _onListener((response) async {
       if (response is WeChatAuthResponse) {
-        onResult?.call(response);
+        onResponse?.call(response);
         if (response.isSuccessful && response.code != null) {
           if (onToken != null || onUserinfo != null) {
             try {
-              final tokenData = await _params!.httpBuilder
-                  ?.call(_getTokenUrl(response.code!));
+              final tokenData =
+                  await _params!.onHttp?.call(_getTokenUrl(response.code!));
               if (tokenData == null) {
-                _params!.logBuilder?.call('Token 数据获取失败 $tokenData');
+                _params!.onLog?.call('Token 数据获取失败 $tokenData');
                 return;
               }
               final token = WXTokenModel.fromJson(jsonDecode(tokenData));
@@ -183,45 +203,45 @@ class FlWX {
                   token.openid!.isEmpty ||
                   token.accessToken == null ||
                   token.accessToken!.isEmpty) {
-                _params!.logBuilder
-                    ?.call('没有获取到 openid 和 accessToken  ${token.toMap()}');
+                _params!.onLog
+                    ?.call('没有获取到 openid 和 accessToken ${token.toMap()}');
                 return;
               }
 
               if (onUserinfo != null) {
-                final userInfoData = await _params!.httpBuilder
+                final userInfoData = await _params!.onHttp
                     ?.call(_getUserInfoUrl(token.openid!, token.accessToken!));
                 if (userInfoData == null) {
-                  _params!.logBuilder?.call('UserInfo 数据获取失败 $userInfoData');
+                  _params!.onLog?.call('UserInfo 数据获取失败 $userInfoData');
                   return;
                 }
                 final userInfo = WXUserModel.fromJson(jsonDecode(userInfoData));
                 onUserinfo(response, token, userInfo);
               }
             } catch (e) {
-              _params!.logBuilder?.call('数据解析失败 $e');
+              _params!.onLog?.call('数据解析失败 $e');
             }
           }
         }
       } else if (response is WeChatAuthByQRCodeFinishedResponse) {}
     });
-    final result = await fluWX.authBy(which: which);
+    final result = await fluwx.authBy(which: which);
     if (!result) {
       cancelable.cancel();
-      _params!.toastBuilder?.call('微信授权失败');
+      _params!.onToast?.call('微信授权失败');
     }
     return result;
   }
 
   Future<bool> autoDeduct(AutoDeduct data,
-      {Function(WeChatResponse response)? onResult}) async {
+      {FlWeChatResponseCallback? onResponse}) async {
     final cancelable = _onListener((response) {
-      onResult?.call(response);
+      onResponse?.call(response);
     });
-    final result = await fluWX.autoDeduct(data: data);
+    final result = await fluwx.autoDeduct(data: data);
     if (!result) {
       cancelable.cancel();
-      _params!.toastBuilder?.call('微信签约失败');
+      _params!.onToast?.call('微信签约失败');
     }
     return result;
   }
@@ -229,28 +249,28 @@ class FlWX {
   /// 调用微信支付
   Future<bool> pay(
     PayType which, {
-    Function()? onSuccess,
-    Function(WeChatPaymentResponse response)? onResult,
+    FlWeChatPayResponseResultCallback? onSuccess,
+    FlWeChatPayResponseCallback? onResponse,
   }) async {
     if (!await isInstalled) return false;
     final cancelable = _onListener((response) {
       if (response is WeChatPaymentResponse) {
-        onResult?.call(response);
-        _params!.logBuilder?.call('微信支付 result code: ${response.errCode} ');
+        onResponse?.call(response);
+        _params!.onLog?.call('微信支付 result code: ${response.errCode} ');
         if (response.errCode == 0) {
-          _params!.toastBuilder?.call('支付成功');
+          _params!.onToast?.call('支付成功');
           onSuccess?.call();
         } else if (response.errCode == -2) {
-          _params!.toastBuilder?.call('已取消支付');
+          _params!.onToast?.call('已取消支付');
         } else {
-          _params!.toastBuilder?.call('支付失败');
+          _params!.onToast?.call('支付失败');
         }
       }
     });
-    final result = await fluWX.pay(which: which);
+    final result = await fluwx.pay(which: which);
     if (!result) {
       cancelable.cancel();
-      _params!.toastBuilder?.call('支付失败');
+      _params!.onToast?.call('支付失败');
     }
     return result;
   }
@@ -259,43 +279,50 @@ class FlWX {
 
   Future<bool> open(OpenType target) async {
     if (!await isInstalled) return false;
-    return fluWX.open(target: target);
+    return fluwx.open(target: target);
   }
 
-  Future<bool> openWeChatApp({
-    Function(WeChatLaunchFromWXRequest response)? onResult,
-  }) async {
+  Future<bool> openWeChatApp(
+      {FlWeChatLaunchFromWXRequestCallback? onResponse}) async {
     if (!await isInstalled) return false;
     final cancelable = _onListener((response) {
-      if (response is WeChatLaunchFromWXRequest) onResult?.call(response);
+      if (response is WeChatLaunchFromWXRequest) onResponse?.call(response);
     });
-    final result = await fluWX.open(target: WeChatApp());
+    final result = await fluwx.open(target: WeChatApp());
     if (!result) cancelable.cancel();
     return result;
   }
 
-  Future<bool> openBrowser(String url) async {
+  Future<bool> openBrowser(String url,
+      {FlWeChatOpenBusinessWebViewResponseCallback? onResponse}) async {
     if (!await isInstalled) return false;
-    return fluWX.open(target: Browser(url));
+    final cancelable = _onListener((response) {
+      if (response is WeChatOpenBusinessWebviewResponse) {
+        onResponse?.call(response);
+      }
+    });
+    final result = await fluwx.open(target: Browser(url));
+    if (!result) cancelable.cancel();
+    return result;
   }
 
   Future<bool> openRankList() async {
     if (!await isInstalled) return false;
-    return fluWX.open(target: RankList());
+    return fluwx.open(target: RankList());
   }
 
   Future<bool> openBusinessView({
     required String businessType,
     required String query,
-    Function(WeChatOpenBusinessViewResponse response)? onResult,
+    FlWeChatOpenBusinessViewResponseCallback? onResponse,
   }) async {
     if (!await isInstalled) return false;
     final cancelable = _onListener((response) {
       if (response is WeChatOpenBusinessViewResponse) {
-        onResult?.call(response);
+        onResponse?.call(response);
       }
     });
-    final result = await fluWX.open(
+    final result = await fluwx.open(
         target: BusinessView(businessType: businessType, query: query));
     if (!result) cancelable.cancel();
     return result;
@@ -307,13 +334,13 @@ class FlWX {
     String locationId = '',
     String cardId = '',
     String canMultiSelect = '',
-    Function(WeChatOpenInvoiceResponse response)? onResult,
+    Function(WeChatOpenInvoiceResponse response)? onResponse,
   }) async {
     if (!await isInstalled) return false;
     final cancelable = _onListener((response) {
-      if (response is WeChatOpenInvoiceResponse) onResult?.call(response);
+      if (response is WeChatOpenInvoiceResponse) onResponse?.call(response);
     });
-    final result = await fluWX.open(
+    final result = await fluwx.open(
         target: Invoice(
             appId: appId,
             cardType: cardType,
@@ -327,32 +354,34 @@ class FlWX {
   Future<bool> openCustomerServiceChat({
     required String corpId,
     required String url,
-    Function(WeChatOpenCustomerServiceChatResponse response)? onResult,
+    Function(WeChatOpenCustomerServiceChatResponse response)? onResponse,
   }) async {
     if (!await isInstalled) return false;
     final cancelable = _onListener((response) {
       if (response is WeChatOpenCustomerServiceChatResponse) {
-        onResult?.call(response);
+        onResponse?.call(response);
       }
     });
     final result =
-        await fluWX.open(target: CustomerServiceChat(corpId: corpId, url: url));
+        await fluwx.open(target: CustomerServiceChat(corpId: corpId, url: url));
     if (!result) cancelable.cancel();
     return result;
   }
 
   Future<bool> openMiniProgram(String username,
       {String? path,
-      Function(WeChatLaunchMiniProgramResponse response)? onResult}) async {
+      Function(WeChatLaunchMiniProgramResponse response)? onResponse}) async {
     if (!await isInstalled) return false;
     final cancelable = _onListener((response) {
-      if (response is WeChatLaunchMiniProgramResponse) onResult?.call(response);
+      if (response is WeChatLaunchMiniProgramResponse) {
+        onResponse?.call(response);
+      }
     });
     final result =
-        await fluWX.open(target: MiniProgram(username: username, path: path));
+        await fluwx.open(target: MiniProgram(username: username, path: path));
     if (!result) {
       cancelable.cancel();
-      _params?.toastBuilder?.call('小程序打开失败');
+      _params?.onToast?.call('小程序打开失败');
     }
     return result;
   }
@@ -362,12 +391,12 @@ class FlWX {
       required int scene,
       required String templateId,
       String? reserved,
-      Function(WeChatSubscribeMsgResponse response)? onResult}) async {
+      Function(WeChatSubscribeMsgResponse response)? onResponse}) async {
     if (!await isInstalled) return false;
     final cancelable = _onListener((response) {
-      if (response is WeChatSubscribeMsgResponse) onResult?.call(response);
+      if (response is WeChatSubscribeMsgResponse) onResponse?.call(response);
     });
-    final result = await fluWX.open(
+    final result = await fluwx.open(
         target: SubscribeMessage(
             appId: appId,
             scene: scene,
@@ -380,9 +409,9 @@ class FlWX {
   /// ****************** share ****************** ///
 
   Future<bool> share(WeChatShareModel what,
-      {FlWXWeChatShareResponse? onResult}) async {
+      {FlWeChatShareResponseCallback? onResponse}) async {
     if (!await isInstalled) return false;
-    return _shareResponse(fluWX.share(what), onResult: onResult);
+    return _shareResponse(fluwx.share(what), onResponse: onResponse);
   }
 
   Future<bool> shareText(
@@ -394,19 +423,25 @@ class FlWX {
     String? messageAction,
     String? mediaTagName,
     String? msgSignature,
-    FlWXWeChatShareResponse? onResult,
+    Uint8List? thumbData,
+    String? thumbDataHash,
+    FlWeChatShareResponseCallback? onResponse,
   }) async {
     if (!await isInstalled) return false;
     return _shareResponse(
-        fluWX.share(WeChatShareTextModel(source,
-            title: title ?? _appName,
-            description: description ?? _appName,
-            scene: scene,
-            messageExt: messageExt,
-            messageAction: messageAction,
-            mediaTagName: mediaTagName,
-            msgSignature: msgSignature)),
-        onResult: onResult);
+        fluwx.share(WeChatShareTextModel(
+          source,
+          title: title ?? _appName,
+          description: description ?? _appName,
+          scene: scene,
+          messageExt: messageExt,
+          messageAction: messageAction,
+          mediaTagName: mediaTagName,
+          msgSignature: msgSignature,
+          thumbData: thumbData ?? _shareThumbnail,
+          thumbDataHash: thumbDataHash,
+        )),
+        onResponse: onResponse);
   }
 
   Future<bool> shareMiniProgram(
@@ -415,64 +450,62 @@ class FlWX {
     WXMiniProgramType miniProgramType = WXMiniProgramType.release,
     required String userName,
     String path = "/",
-    WeChatImage? hdImagePath,
     String? title,
     String? description,
-    WeChatImage? thumbnail,
     bool withShareTicket = false,
     String? messageExt,
     String? messageAction,
     String? mediaTagName,
-    bool compressThumbnail = true,
     String? msgSignature,
-    FlWXWeChatShareResponse? onResult,
+    Uint8List? thumbData,
+    String? thumbDataHash,
+    FlWeChatShareResponseCallback? onResponse,
   }) async {
     if (!await isInstalled) return false;
-    assert(thumbnail != null || _shareThumbnail != null);
-    if (thumbnail == null && _shareThumbnail == null) return false;
     return _shareResponse(
-        fluWX.share(WeChatShareMiniProgramModel(
-            webPageUrl: webPageUrl,
-            userName: userName,
-            title: title ?? _appName,
-            description: description ?? _appName,
-            thumbnail: (thumbnail ?? _shareThumbnail)!,
-            messageExt: messageExt,
-            messageAction: messageAction,
-            mediaTagName: mediaTagName,
-            compressThumbnail: compressThumbnail,
-            msgSignature: msgSignature)),
-        onResult: onResult);
+        fluwx.share(WeChatShareMiniProgramModel(
+          webPageUrl: webPageUrl,
+          userName: userName,
+          title: title ?? _appName,
+          description: description ?? _appName,
+          messageExt: messageExt,
+          messageAction: messageAction,
+          mediaTagName: mediaTagName,
+          msgSignature: msgSignature,
+          thumbData: thumbData ?? _shareThumbnail,
+          thumbDataHash: thumbDataHash,
+        )),
+        onResponse: onResponse);
   }
 
   Future<bool> shareImage(
-    WeChatImage source, {
+    WeChatImageToShare source, {
     String? title,
     String? description,
     WeChatScene scene = WeChatScene.session,
-    WeChatImage? thumbnail,
     String? messageExt,
     String? messageAction,
     String? mediaTagName,
-    bool compressThumbnail = true,
     String? msgSignature,
-    FlWXWeChatShareResponse? onResult,
+    Uint8List? thumbData,
+    String? thumbDataHash,
+    FlWeChatShareResponseCallback? onResponse,
   }) async {
     if (!await isInstalled) return false;
     return _shareResponse(
-        fluWX.share(WeChatShareImageModel(
+        fluwx.share(WeChatShareImageModel(
           source,
           title: title ?? _appName,
           description: description ?? _appName,
           scene: scene,
-          thumbnail: thumbnail ?? _shareThumbnail,
           messageExt: messageExt,
           messageAction: messageAction,
           mediaTagName: mediaTagName,
-          compressThumbnail: compressThumbnail,
           msgSignature: msgSignature,
+          thumbData: thumbData ?? _shareThumbnail,
+          thumbDataHash: thumbDataHash,
         )),
-        onResult: onResult);
+        onResponse: onResponse);
   }
 
   Future<bool> shareMusic({
@@ -480,35 +513,35 @@ class FlWX {
     String? musicDataUrl,
     String? musicLowBandUrl,
     String? musicLowBandDataUrl,
-    WeChatImage? thumbnail,
     String? title,
     String? description,
     WeChatScene scene = WeChatScene.session,
     String? messageExt,
     String? messageAction,
     String? mediaTagName,
-    bool compressThumbnail = true,
     String? msgSignature,
-    FlWXWeChatShareResponse? onResult,
+    Uint8List? thumbData,
+    String? thumbDataHash,
+    FlWeChatShareResponseCallback? onResponse,
   }) async {
     if (!await isInstalled) return false;
     return _shareResponse(
-        fluWX.share(WeChatShareMusicModel(
+        fluwx.share(WeChatShareMusicModel(
           musicUrl: musicUrl,
           musicDataUrl: musicDataUrl,
           musicLowBandUrl: musicLowBandUrl,
           musicLowBandDataUrl: musicLowBandDataUrl,
-          thumbnail: thumbnail ?? _shareThumbnail,
           title: title ?? _appName,
           description: description ?? _appName,
           scene: scene,
           messageExt: messageExt,
           messageAction: messageAction,
           mediaTagName: mediaTagName,
-          compressThumbnail: compressThumbnail,
           msgSignature: msgSignature,
+          thumbData: thumbData ?? _shareThumbnail,
+          thumbDataHash: thumbDataHash,
         )),
-        onResult: onResult);
+        onResponse: onResponse);
   }
 
   Future<bool> shareVideo(
@@ -516,56 +549,59 @@ class FlWX {
     String? title,
     String? description,
     WeChatScene scene = WeChatScene.session,
-    WeChatImage? thumbnail,
     String? messageExt,
     String? messageAction,
     String? mediaTagName,
-    bool compressThumbnail = true,
     String? msgSignature,
-    FlWXWeChatShareResponse? onResult,
+    Uint8List? thumbData,
+    String? thumbDataHash,
+    FlWeChatShareResponseCallback? onResponse,
   }) async {
     if (!await isInstalled) return false;
     return _shareResponse(
-        fluWX.share(WeChatShareVideoModel(
-            title: title ?? _appName,
-            videoUrl: videoUrl,
-            description: description ?? _appName,
-            thumbnail: thumbnail ?? _shareThumbnail,
-            scene: scene,
-            messageExt: messageExt,
-            messageAction: messageAction,
-            mediaTagName: mediaTagName,
-            compressThumbnail: compressThumbnail,
-            msgSignature: msgSignature)),
-        onResult: onResult);
+        fluwx.share(WeChatShareVideoModel(
+          title: title ?? _appName,
+          videoUrl: videoUrl,
+          description: description ?? _appName,
+          scene: scene,
+          messageExt: messageExt,
+          messageAction: messageAction,
+          mediaTagName: mediaTagName,
+          msgSignature: msgSignature,
+          thumbData: thumbData ?? _shareThumbnail,
+          thumbDataHash: thumbDataHash,
+        )),
+        onResponse: onResponse);
   }
 
   Future<bool> shareWebPage(
     String webPage, {
     String? title,
     String? description,
-    WeChatImage? thumbnail,
     WeChatScene scene = WeChatScene.session,
     String? messageExt,
     String? messageAction,
     String? mediaTagName,
-    bool compressThumbnail = true,
     String? msgSignature,
-    FlWXWeChatShareResponse? onResult,
+    Uint8List? thumbData,
+    String? thumbDataHash,
+    FlWeChatShareResponseCallback? onResponse,
   }) async {
     if (!await isInstalled) return false;
     return _shareResponse(
-        fluWX.share(WeChatShareWebPageModel(webPage,
-            title: title ?? _appName,
-            description: description ?? _appName,
-            thumbnail: thumbnail ?? _shareThumbnail,
-            scene: scene,
-            messageExt: messageExt,
-            messageAction: messageAction,
-            mediaTagName: mediaTagName,
-            compressThumbnail: compressThumbnail,
-            msgSignature: msgSignature)),
-        onResult: onResult);
+        fluwx.share(WeChatShareWebPageModel(
+          webPage,
+          title: title ?? _appName,
+          description: description ?? _appName,
+          scene: scene,
+          messageExt: messageExt,
+          messageAction: messageAction,
+          mediaTagName: mediaTagName,
+          msgSignature: msgSignature,
+          thumbData: thumbData ?? _shareThumbnail,
+          thumbDataHash: thumbDataHash,
+        )),
+        onResponse: onResponse);
   }
 
   Future<bool> shareFile(
@@ -574,36 +610,37 @@ class FlWX {
     String? title,
     String? description,
     WeChatScene scene = WeChatScene.session,
-    WeChatImage? thumbnail,
     String? messageExt,
     String? messageAction,
     String? mediaTagName,
-    bool compressThumbnail = true,
     String? msgSignature,
-    FlWXWeChatShareResponse? onResult,
+    Uint8List? thumbData,
+    String? thumbDataHash,
+    FlWeChatShareResponseCallback? onResponse,
   }) async {
     if (!await isInstalled) return false;
     return _shareResponse(
-        fluWX.share(WeChatShareFileModel(
-            WeChatFile.file(source, suffix: suffix),
-            title: title ?? _appName,
-            description: description ?? _appName,
-            thumbnail: thumbnail ?? _shareThumbnail,
-            scene: scene,
-            messageExt: messageExt,
-            messageAction: messageAction,
-            mediaTagName: mediaTagName,
-            compressThumbnail: compressThumbnail,
-            msgSignature: msgSignature)),
-        onResult: onResult);
+        fluwx.share(WeChatShareFileModel(
+          WeChatFile.file(source, suffix: suffix),
+          title: title ?? _appName,
+          description: description ?? _appName,
+          scene: scene,
+          messageExt: messageExt,
+          messageAction: messageAction,
+          mediaTagName: mediaTagName,
+          msgSignature: msgSignature,
+          thumbData: thumbData ?? _shareThumbnail,
+          thumbDataHash: thumbDataHash,
+        )),
+        onResponse: onResponse);
   }
 
   Future<bool> _shareResponse(
     Future<bool> share, {
-    FlWXWeChatShareResponse? onResult,
+    FlWeChatShareResponseCallback? onResponse,
   }) async {
     final cancelable = _onListener((response) {
-      if (response is WeChatShareResponse) onResult?.call(response);
+      if (response is WeChatShareResponse) onResponse?.call(response);
     });
     final result = await share;
     if (!result) cancelable.cancel();
@@ -611,17 +648,17 @@ class FlWX {
   }
 }
 
-class FlWXBuilderParams {
-  FlWXBuilderParams({this.toastBuilder, this.logBuilder, this.httpBuilder});
+class FlWXCallbackParams {
+  FlWXCallbackParams({this.onToast, this.onLog, this.onHttp});
 
   /// toast 显示
-  final FlWXToastBuilder? toastBuilder;
+  final FlWXToastCallback? onToast;
 
   /// 日志 打印
-  final FlWXLogBuilder? logBuilder;
+  final FlWXLogCallback? onLog;
 
   /// http 请求 返回 json
-  final FlWXHTTPBuilder? httpBuilder;
+  final FlWXHTTPCallback? onHttp;
 }
 
 class WXUserModel {
@@ -718,7 +755,7 @@ extension ExtensionMap on Map {
             sign: sign.toString());
       }
     } catch (e) {
-      debugPrint(e.toString());
+      FlWX()._params?.onLog?.call(e.toString());
     }
     return null;
   }
