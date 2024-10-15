@@ -6,12 +6,12 @@ void func() {
   /// 启动注册
   FlWX().register(
       appId: '',
-      params: FlWXBuilderParams(
-          httpBuilder: (url) async {
+      params: FlWXCallbackParams(
+          onHttp: (url) async {
             return '';
           },
-          logBuilder: (v) => log(v),
-          toastBuilder: (v) => showToast(v)));
+          onLog: (v) => log(v),
+          onToast: (v) => showToast(v)));
 
   /// 安装判断
   FlWX().isInstalled;
