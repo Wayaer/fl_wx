@@ -177,7 +177,6 @@ class FlWX {
 
     /// 获取userinfo回调
     FlWeChatAuthResponseUserinfoCallback? onUserinfo,
-    bool getUserInfo = false,
   }) async {
     if (!await isInstalled) return false;
     final cancelable = _onListener((response) async {
