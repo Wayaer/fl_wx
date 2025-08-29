@@ -1,6 +1,6 @@
 name: fl_wx
 description: Simple encapsulation and extension of fluwx,The fluwx plugin will be updated here.
-version: 0.3.0
+version: 0.4.0
 repository: https://github.com/Wayaer/fl_wx.git
 
 environment:
