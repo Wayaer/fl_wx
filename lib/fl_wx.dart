@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
+
 import 'package:fluwx/fluwx.dart';
 
 export 'package:fluwx/fluwx.dart';
@@ -47,6 +48,8 @@ class FlWX {
   FlWX._();
 
   static FlWX? _singleton;
+
+  static FlWX get instance => FlWX();
 
   final Fluwx _fluwx = Fluwx();
 

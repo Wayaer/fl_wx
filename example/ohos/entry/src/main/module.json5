@@ -11,6 +11,11 @@
     "deliveryWithInstall": true,
     "installationFree": false,
     "pages": "$profile:main_pages",
+    "querySchemes": [
+      "alipays",
+      "weixin",
+      "wxopensdk",
+    ],
     "abilities": [
       {
         "name": "EntryAbility",
@@ -27,7 +32,8 @@
               "entity.system.home"
             ],
             "actions": [
-              "action.system.home"
+              "action.system.home",
+              "wxentity.action.open"
             ]
           }
         ]
