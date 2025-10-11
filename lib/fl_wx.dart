@@ -127,9 +127,7 @@ class FlWX {
   /// 是否安装微信
   Future<bool> get isInstalled async {
     assert(_isRegister, '请先调用 FlWX().register()');
-    final installed = await fluwx.isWeChatInstalled;
-    if (!installed) _params!.onToast?.call('该服务需要先安装微信');
-    return installed;
+    return await fluwx.isWeChatInstalled;
   }
 
   /// isSupportOpenBusinessView
