@@ -17,11 +17,11 @@ typedef FlWeChatPayResponseResultCallback = FutureOr<void> Function();
 typedef FlWeChatResponseTokenCallback<T> = FutureOr<void> Function(T response, WXTokenModel token);
 
 /// WeChatResponse
-typedef FlWeChatResponseUserinfoCallback<T> = FutureOr<void> Function(T response, WXTokenModel token, WXUserModel userInfo);
+typedef FlWeChatResponseUserinfoCallback<T> = FutureOr<void> Function(
+    T response, WXTokenModel token, WXUserModel userInfo);
 
 /// Auth token 回调
-typedef FlWeChatAuthResponseTokenCallback = FutureOr<void> Function(
-    WeChatAuthResponse response, WXTokenModel token);
+typedef FlWeChatAuthResponseTokenCallback = FutureOr<void> Function(WeChatAuthResponse response, WXTokenModel token);
 
 /// Auth userinfo 回调
 typedef FlWeChatAuthResponseUserinfoCallback = FutureOr<void> Function(
@@ -33,13 +33,13 @@ typedef FlWXCallbackString = FutureOr<void> Function(String msg);
 typedef FlWXHTTPCallback = FutureOr<String?> Function(String url);
 
 class FlWX {
-  factory FlWX() => instance;
+  factory FlWX() => _instance;
 
   FlWX._();
 
-  static FlWX? _singleton;
+  static final FlWX _instance = FlWX._();
 
-  static FlWX get instance => _singleton ??= FlWX._();
+  static FlWX get instance => _instance;
 
   final Fluwx _fluwx = Fluwx();
 
@@ -113,6 +113,7 @@ class FlWX {
       await onResponse(response);
       Future.delayed(const Duration(milliseconds: 500), cancelable?.cancel);
     }
+
     return cancelable = fluwx.addSubscriber(subscriber);
   }
 
@@ -164,7 +165,10 @@ class FlWX {
               final token = WXTokenModel.fromJson(jsonDecode(tokenData));
               await onToken?.call(response, token);
               if (onUserInfo != null) {
-                if (token.openid == null || token.openid!.isEmpty || token.accessToken == null || token.accessToken!.isEmpty) {
+                if (token.openid == null ||
+                    token.openid!.isEmpty ||
+                    token.accessToken == null ||
+                    token.accessToken!.isEmpty) {
                   _params?.onLog?.call('没有获取到 openid 和 accessToken ${token.toMap()}');
                   return;
                 }
@@ -258,7 +262,8 @@ class FlWX {
     return result;
   }
 
-  Future<bool> openBrowser(String url, {FlWeChatResponseCallback<WeChatOpenBusinessWebviewResponse>? onResponse}) async {
+  Future<bool> openBrowser(String url,
+      {FlWeChatResponseCallback<WeChatOpenBusinessWebviewResponse>? onResponse}) async {
     if (!await isInstalled) return false;
     final cancelable = _addListener((response) async {
       if (response is WeChatOpenBusinessWebviewResponse) {
