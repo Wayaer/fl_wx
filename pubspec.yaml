@@ -1,18 +1,25 @@
 name: fl_wx
-description: Simple encapsulation and extension of fluwx,The fluwx plugin will be updated here.
-version: 0.5.1
+description: A simple and practical Flutter wrapper for fluwx, providing simplified WeChat login, payment and sharing APIs on Android, iOS and HarmonyOS.
+version: 1.0.0
 repository: https://github.com/Wayaer/fl_wx.git
+issue_tracker: https://github.com/Wayaer/fl_wx/issues
+topics:
+  - wechat
+  - fluwx
+  - harmonyos
+  - share
+  - payment
 
 environment:
-  sdk: '>=3.0.0 <4.0.0'
-  flutter: '>=3.24.0'
+  sdk: ^3.11.0
+  flutter: '>=3.41.0'
 
 dependencies:
   flutter:
     sdk: flutter
-  fluwx: ^5.7.5
+  fluwx: ^6.0.6
 
 dev_dependencies:
-  flutter_lints: ^5.0.0
-
-
+  flutter_lints: ^6.0.0
+  flutter_test:
+    sdk: flutter

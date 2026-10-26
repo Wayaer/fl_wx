@@ -1,0 +1,14 @@
+{
+  "pins" : [
+    {
+      "identity" : "wechatopensdk-spm",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/JarvanMo/WechatOpenSDK-SPM",
+      "state" : {
+        "revision" : "7361cbc8415621836052b68006a4a3e6c988255c",
+        "version" : "2.0.8"
+      }
+    }
+  ],
+  "version" : 2
+}
